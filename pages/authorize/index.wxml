@@ -1,0 +1,7 @@
+<view class="container">
+    <form bindsubmit="bindSave">
+    <view style='width:100%;padding-left:50rpx;font-size: 28rpx;margin-top:30rpx;'>申请获取以下权限</view>
+    <view style='width:100%;padding-left:50rpx;font-size: 28rpx;margin-top:30rpx;'>获得您的公开信息(昵称，头像等)</view>
+    <button open-type="getUserInfo" bindgetuserinfo="bindGetUserInfo" class="save-btn">授权登录</button>
+    </form>
+</view>
