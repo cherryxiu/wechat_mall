@@ -1,3 +1,8 @@
+/**
+ * 获取轮播图列表
+ */
+
+
 // 云函数入口文件
 const cloud = require('wx-server-sdk')
 

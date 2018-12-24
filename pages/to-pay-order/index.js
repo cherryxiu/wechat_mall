@@ -12,7 +12,7 @@ Page({
     allGoodsAndYunPrice:0,
     goodsJsonStr:"",
     orderType:"", //订单类型，购物车下单或立即支付下单，默认是购物车，
-    pingtuanOpenId:undefined, //拼团的话记录团号
+   pingtuanOpenId:undefined, //拼团的话记录团号
 
     hasNoCoupons: true,
     coupons: [],
@@ -47,10 +47,11 @@ Page({
   },
 
   onLoad: function (e) {
+    console.log("e===" + JSON.stringify(e))
     this.setData({
       isNeedLogistics: 1,
       orderType: e.orderType,
-      pingtuanOpenId: e.pingtuanOpenId
+      //pingtuanOpenId: e.pingtuanOpenId
     });
   },
 
@@ -68,6 +69,8 @@ Page({
     wx.showLoading();
     var that = this;
     var loginToken = wx.getStorageSync('token') // 用户登录 token
+
+    console.log("用户登录" + loginToken)
     var remark = ""; // 备注信息
     if (e) {
       remark = e.detail.value.remark; // 备注信息
@@ -81,9 +84,9 @@ Page({
     if (that.data.kjId) {
       postData.kjid = that.data.kjId
     }
-    if (that.data.pingtuanOpenId) {
-      postData.pingtuanOpenId = that.data.pingtuanOpenId
-    }
+    // if (that.data.pingtuanOpenId) {
+    //   postData.pingtuanOpenId = that.data.pingtuanOpenId
+    // }
     if (that.data.isNeedLogistics > 0) {
       if (!that.data.curAddressData) {
         wx.hideLoading();
@@ -111,84 +114,89 @@ Page({
       postData.calculate = "true";
     }
 
+    //保存订单todo
 
-    wx.request({
-      //url: 'https://api.it120.cc/'+ app.globalData.subDomain +'/order/create',
-      method:'POST',
-      header: {
-        'content-type': 'application/x-www-form-urlencoded'
-      },
-      data: postData, // 设置请求的 参数
-      success: (res) =>{
-        wx.hideLoading();
-        if (res.data.code != 0) {
-          wx.showModal({
-            title: '错误',
-            content: res.data.msg,
-            showCancel: false
-          })
-          return;
-        }
 
-        if (e && "buyNow" != that.data.orderType) {
-          // 清空购物车数据
-          wx.removeStorageSync('shopCarInfo');
-        }
-        if (!e) {
-          that.setData({
-            totalScoreToPay: res.data.data.score,
-            isNeedLogistics: res.data.data.isNeedLogistics,
-            allGoodsPrice: res.data.data.amountTotle,
-            allGoodsAndYunPrice: res.data.data.amountLogistics + res.data.data.amountTotle,
-            yunPrice: res.data.data.amountLogistics
-          });
-          that.getMyCoupons();
-          return;
-        }
-        // 配置模板消息推送
-        var postJsonString = {};
-        postJsonString.keyword1 = { value: res.data.data.dateAdd, color: '#173177' }
-        postJsonString.keyword2 = { value: res.data.data.amountReal + '元', color: '#173177' }
-        postJsonString.keyword3 = { value: res.data.data.orderNumber, color: '#173177' }
-        postJsonString.keyword4 = { value: '订单已关闭', color: '#173177' }
-        postJsonString.keyword5 = { value: '您可以重新下单，请在30分钟内完成支付', color:'#173177'}
-        app.sendTempleMsg(res.data.data.id, -1,
-          'mGVFc31MYNMoR9Z-A9yeVVYLIVGphUVcK2-S2UdZHmg', e.detail.formId,
-          'pages/index/index', JSON.stringify(postJsonString));
-        postJsonString = {};
-        postJsonString.keyword1 = { value: '您的订单已发货，请注意查收', color: '#173177' }
-        postJsonString.keyword2 = { value: res.data.data.orderNumber, color: '#173177' }
-        postJsonString.keyword3 = { value: res.data.data.dateAdd, color: '#173177' }
-        app.sendTempleMsg(res.data.data.id, 2,
-          'Arm2aS1rsklRuJSrfz-QVoyUzLVmU2vEMn_HgMxuegw', e.detail.formId,
-          'pages/order-details/index?id=' + res.data.data.id, JSON.stringify(postJsonString));
-        // 下单成功，跳转到订单管理界面
-        wx.redirectTo({
-          url: "/pages/order-list/index"
-        });
-      }
-    })
+
+
+
+    // wx.request({
+    //   //url: 'https://api.it120.cc/'+ app.globalData.subDomain +'/order/create',
+    //   method:'POST',
+    //   header: {
+    //     'content-type': 'application/x-www-form-urlencoded'
+    //   },
+    //   data: postData, // 设置请求的 参数
+    //   success: (res) =>{
+    //     wx.hideLoading();
+    //     if (res.data.code != 0) {
+    //       wx.showModal({
+    //         title: '错误',
+    //         content: res.data.msg,
+    //         showCancel: false
+    //       })
+    //       return;
+    //     }
+
+    //     if (e && "buyNow" != that.data.orderType) {
+    //       // 清空购物车数据
+    //       wx.removeStorageSync('shopCarInfo');
+    //     }
+    //     if (!e) {
+    //       that.setData({
+    //         totalScoreToPay: res.data.data.score,
+    //         isNeedLogistics: res.data.data.isNeedLogistics,
+    //         allGoodsPrice: res.data.data.amountTotle,
+    //         allGoodsAndYunPrice: res.data.data.amountLogistics + res.data.data.amountTotle,
+    //         yunPrice: res.data.data.amountLogistics
+    //       });
+    //       that.getMyCoupons();
+    //       return;
+    //     }
+    //     // 配置模板消息推送
+    //     var postJsonString = {};
+    //     postJsonString.keyword1 = { value: res.data.data.dateAdd, color: '#173177' }
+    //     postJsonString.keyword2 = { value: res.data.data.amountReal + '元', color: '#173177' }
+    //     postJsonString.keyword3 = { value: res.data.data.orderNumber, color: '#173177' }
+    //     postJsonString.keyword4 = { value: '订单已关闭', color: '#173177' }
+    //     postJsonString.keyword5 = { value: '您可以重新下单，请在30分钟内完成支付', color:'#173177'}
+    //     app.sendTempleMsg(res.data.data.id, -1,
+    //       'mGVFc31MYNMoR9Z-A9yeVVYLIVGphUVcK2-S2UdZHmg', e.detail.formId,
+    //       'pages/index/index', JSON.stringify(postJsonString));
+    //     postJsonString = {};
+    //     postJsonString.keyword1 = { value: '您的订单已发货，请注意查收', color: '#173177' }
+    //     postJsonString.keyword2 = { value: res.data.data.orderNumber, color: '#173177' }
+    //     postJsonString.keyword3 = { value: res.data.data.dateAdd, color: '#173177' }
+    //     app.sendTempleMsg(res.data.data.id, 2,
+    //       'Arm2aS1rsklRuJSrfz-QVoyUzLVmU2vEMn_HgMxuegw', e.detail.formId,
+    //       'pages/order-details/index?id=' + res.data.data.id, JSON.stringify(postJsonString));
+    //     // 下单成功，跳转到订单管理界面
+    //     wx.redirectTo({
+    //       url: "/pages/order-list/index"
+    //     });
+    //   }
+    // })
   },
   initShippingAddress: function () {
     var that = this;
-    wx.request({
-     // url: 'https://api.it120.cc/'+ app.globalData.subDomain +'/user/shipping-address/default',
-      data: {
-        token: wx.getStorageSync('token')
-      },
-      success: (res) =>{
-        if (res.data.code == 0) {
-          that.setData({
-            curAddressData:res.data.data
-          });
-        }else{
-          that.setData({
-            curAddressData: null
-          });
-        }
+    // wx.request({
+    //  // url: 'https://api.it120.cc/'+ app.globalData.subDomain +'/user/shipping-address/default',
+    //   data: {
+    //     token: wx.getStorageSync('token')
+    //   },
+    //   success: (res) =>{
+    //     if (res.data.code == 0) {
+    //       that.setData({
+    //         curAddressData:res.data.data
+    //       });
+    //     }else{
+    //       that.setData({
+    //         curAddressData: null
+    //       });
+    //     }
         that.processYunfei();
-      }
-    })
+    //   }
+    // })
   },
   processYunfei: function () {
     var that = this;
@@ -202,8 +210,9 @@ Page({
       if (carShopBean.logistics) {
         isNeedLogistics = 1;
       }
+      
       allGoodsPrice += carShopBean.price * carShopBean.number;
-
+      console.log("价格为" + carShopBean.price + "数量是" +carShopBean.number+ "总价" +allGoodsPrice)
       var goodsJsonStrTmp = '';
       if (i > 0) {
         goodsJsonStrTmp = ",";
@@ -226,9 +235,10 @@ Page({
     //console.log(goodsJsonStr);
     that.setData({
       isNeedLogistics: isNeedLogistics,
-      goodsJsonStr: goodsJsonStr
+      goodsJsonStr: goodsJsonStr,
+      allGoodsPrice: allGoodsPrice.toFixed(2)
     });
-    that.createOrder();
+  // that.createOrder();
   },
   addAddress: function () {
     wx.navigateTo({

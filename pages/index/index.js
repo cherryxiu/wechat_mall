@@ -24,7 +24,6 @@ Page({
     curPage:1,
     pageSize:20
   },
-
   tabClick: function (e) {
     this.setData({
       activeCategoryId: e.currentTarget.id,
@@ -62,49 +61,39 @@ Page({
       title: wx.getStorageSync('mallName')
     })
     wx.cloud.init()
+    //轮播图
     wx.cloud.callFunction({
-      //url: 'https://api.it120.cc/' + app.globalData.subDomain + '/banner/list',
       name:"getBannerList",
-      data: {
-        
+      data: {      
       },
-      success: function(res) {
-        // if (res.data.code == 404) {
-        //   console.log("轮播图片异常。。。")
-        //   wx.showModal({
-        //     title: '提示',
-        //     content: '请在后台添加 banner 轮播图片',
-        //     showCancel: false
-        //   })
-        // } else {
-        console.log("轮播图片" +JSON.stringify(res))
-        console.log("轮播图片" + res.result)
+      success: function(res) {    
            that.setData({
              banners: res.result.data
          });
-        //  }
       }
 
     }),
-    wx.request({
-      //url: 'https://api.it120.cc/'+ app.globalData.subDomain +'/shop/goods/category/all',
-      success: function(res) {
-        var categories = [{id:0, name:"全部"}];
-        if (res.data.code == 0) {
-          for (var i = 0; i < res.data.data.length; i++) {
-            categories.push(res.data.data[i]);
-          }
-        }
-        that.setData({
-          categories:categories,
-          activeCategoryId:0,
-          curPage: 1
-        });
-        that.getGoodsList(0);
-      }
-    })
-    that.getCoupons ();
-    that.getNotice ();
+    //商品种类
+      wx.cloud.callFunction({
+       name:"getCategoryList",
+       data:{
+       } ,
+       success:function(res){
+         var categories = [{ id: 0, name: "全部" }];
+           for (var i = 0; i < res.result.data.length; i++) {
+             categories.push(res.result.data[i]);
+           }
+         that.setData({
+           categories: categories,
+           activeCategoryId: 0,
+           curPage: 1
+         });
+         //展示第一列"全部"商品
+         that.getGoodsList(0);
+       }
+     })//,
+    // that.getCoupons ();
+    // that.getNotice ();
   },
   onPageScroll(e) {
     let scrollTop = this.data.scrollTop
@@ -116,116 +105,124 @@ Page({
     if (categoryId == 0) {
       categoryId = "";
     }
+    console.log("event.categoryId为" + categoryId)
     var that = this;
     wx.showLoading({
       "mask":true
     })
-    wx.request({
-     // url: 'https://api.it120.cc/'+ app.globalData.subDomain +'/shop/goods/list',
+    wx.cloud.init()
+    wx.cloud.callFunction({
+      name: "getAllGoodsList",
       data: {
         categoryId: categoryId,
         nameLike: that.data.searchInput,
         page: this.data.curPage,
         pageSize: this.data.pageSize
       },
-      success: function(res) {
-        wx.hideLoading()        
-        if (res.data.code == 404 || res.data.code == 700){
-          let newData = { loadingMoreHidden: false }
-          if (!append) {
-            newData.goods = []
-          }
-          that.setData(newData);
-          return
-        }
+      success: function (res) {
+        wx.hideLoading()
+        //if (res.data.code == 404 || res.data.code == 700) {
+          // let newData = { loadingMoreHidden: false }
+          // if (!append) {
+          //   newData.goods = []
+          // }
+          // that.setData(newData);
+          // return
+        //}
         let goods = [];
         if (append) {
           goods = that.data.goods
-        }        
-        for(var i=0;i<res.data.data.length;i++){
-          goods.push(res.data.data[i]);
+        }
+        for (var i = 0; i < res.result.data.length; i++) {
+          goods.push(res.result.data[i]);
         }
         that.setData({
-          loadingMoreHidden: true,
-          goods:goods,
+          loadingMoreHidden: false,
+          goods: goods,
         });
       }
     })
   },
-  getCoupons: function () {
-    var that = this;
-    wx.request({
-      //url: 'https://api.it120.cc/' + app.globalData.subDomain + '/discounts/coupons',
-      data: {
-        type: ''
-      },
-      success: function (res) {
-        if (res.data.code == 0) {
-          that.setData({
-            hasNoCoupons: false,
-            coupons: res.data.data
-          });
-        }
-      }
-    })
-  },
-  gitCoupon : function (e) {
-    var that = this;
-    wx.request({
-     // url: 'https://api.it120.cc/' + app.globalData.subDomain + '/discounts/fetch',
-      data: {
-        id: e.currentTarget.dataset.id,
-        token: wx.getStorageSync('token')
-      },
-      success: function (res) {
-        if (res.data.code == 20001 || res.data.code == 20002) {
-          wx.showModal({
-            title: '错误',
-            content: '来晚了',
-            showCancel: false
-          })
-          return;
-        }
-        if (res.data.code == 20003) {
-          wx.showModal({
-            title: '错误',
-            content: '你领过了，别贪心哦~',
-            showCancel: false
-          })
-          return;
-        }
-        if (res.data.code == 30001) {
-          wx.showModal({
-            title: '错误',
-            content: '您的积分不足',
-            showCancel: false
-          })
-          return;
-        }
-        if (res.data.code == 20004) {
-          wx.showModal({
-            title: '错误',
-            content: '已过期~',
-            showCancel: false
-          })
-          return;
-        }
-        if (res.data.code == 0) {
-          wx.showToast({
-            title: '领取成功，赶紧去下单吧~',
-            icon: 'success',
-            duration: 2000
-          })
-        } else {
-          wx.showModal({
-            title: '错误',
-            content: res.data.msg,
-            showCancel: false
-          })
-        }
-      }
-    })
-  },
+
+
+/**
+ * 优惠劵暂时不用
+ * 
+ */
+  // getCoupons: function () {
+  //   var that = this;
+  //   wx.request({
+  //     //url: 'https://api.it120.cc/' + app.globalData.subDomain + '/discounts/coupons',
+  //     data: {
+  //       type: ''
+  //     },
+  //     success: function (res) {
+  //       if (res.data.code == 0) {
+  //         that.setData({
+  //           hasNoCoupons: false,
+  //           coupons: res.data.data
+  //         });
+  //       }
+  //     }
+  //   })
+  // },
+  // gitCoupon : function (e) {
+  //   var that = this;
+  //   wx.request({
+  //    // url: 'https://api.it120.cc/' + app.globalData.subDomain + '/discounts/fetch',
+  //     data: {
+  //       id: e.currentTarget.dataset.id,
+  //       token: wx.getStorageSync('token')
+  //     },
+  //     success: function (res) {
+  //       if (res.data.code == 20001 || res.data.code == 20002) {
+  //         wx.showModal({
+  //           title: '错误',
+  //           content: '来晚了',
+  //           showCancel: false
+  //         })
+  //         return;
+  //       }
+  //       if (res.data.code == 20003) {
+  //         wx.showModal({
+  //           title: '错误',
+  //           content: '你领过了，别贪心哦~',
+  //           showCancel: false
+  //         })
+  //         return;
+  //       }
+  //       if (res.data.code == 30001) {
+  //         wx.showModal({
+  //           title: '错误',
+  //           content: '您的积分不足',
+  //           showCancel: false
+  //         })
+  //         return;
+  //       }
+  //       if (res.data.code == 20004) {
+  //         wx.showModal({
+  //           title: '错误',
+  //           content: '已过期~',
+  //           showCancel: false
+  //         })
+  //         return;
+  //       }
+  //       if (res.data.code == 0) {
+  //         wx.showToast({
+  //           title: '领取成功，赶紧去下单吧~',
+  //           icon: 'success',
+  //           duration: 2000
+  //         })
+  //       } else {
+  //         wx.showModal({
+  //           title: '错误',
+  //           content: res.data.msg,
+  //           showCancel: false
+  //         })
+  //       }
+  //     }
+  //   })
+  // },
   onShareAppMessage: function () {
     return {
       title: wx.getStorageSync('mallName') + '——' + app.globalData.shareProfile,
@@ -238,20 +235,24 @@ Page({
       }
     }
   },
-  getNotice: function () {
-    var that = this;
-    wx.request({
-     // url: 'https://api.it120.cc/' + app.globalData.subDomain + '/notice/list',
-      data: { pageSize :5},
-      success: function (res) {
-        if (res.data.code == 0) {
-          that.setData({
-            noticeList: res.data.data
-          });
-        }
-      }
-    })
-  },
+  /**
+   * 公告
+   * 
+   */
+  // getNotice: function () {
+  //   var that = this;
+  //   wx.request({
+  //    // url: 'https://api.it120.cc/' + app.globalData.subDomain + '/notice/list',
+  //     data: { pageSize :5},
+  //     success: function (res) {
+  //       if (res.data.code == 0) {
+  //         that.setData({
+  //           noticeList: res.data.data
+  //         });
+  //       }
+  //     }
+  //   })
+  // },
   listenerSearchInput: function (e) {
     this.setData({
       searchInput: e.detail.value
