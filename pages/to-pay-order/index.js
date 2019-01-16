@@ -111,7 +111,7 @@ Page({
     if (!e) {
       postData.calculate = "true";
     }
-    console.log("最终订单的商品"+JSON.stringify(postData))
+    console.log("最终订单的商品==="+JSON.stringify(postData))
     //保存订单todo
     wx.cloud.init()
     wx.cloud.callFunction({
