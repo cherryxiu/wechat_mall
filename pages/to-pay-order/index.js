@@ -69,53 +69,64 @@ Page({
     wx.showLoading();
     var that = this;
     var loginToken = wx.getStorageSync('token') // 用户登录 token
-
+    var nickName = wx.getStorageSync('nickName');//用户昵称
     console.log("用户登录" + loginToken)
     var remark = ""; // 备注信息
     if (e) {
       remark = e.detail.value.remark; // 备注信息
     }
-
     var postData = {
       token: loginToken,
-      goodsJsonStr: that.data.goodsJsonStr,
-      remark: remark
+      goodsJsonStr: that.data.goodsJsonStr
     };
-    if (that.data.kjId) {
-      postData.kjid = that.data.kjId
-    }
+    // if (that.data.kjId) {
+    //   postData.kjid = that.data.kjId
+    // }
     // if (that.data.pingtuanOpenId) {
     //   postData.pingtuanOpenId = that.data.pingtuanOpenId
     // }
-    if (that.data.isNeedLogistics > 0) {
-      if (!that.data.curAddressData) {
-        wx.hideLoading();
-        wx.showModal({
-          title: '错误',
-          content: '请先设置您的收货地址！',
-          showCancel: false
-        })
-        return;
-      }
-      postData.provinceId = that.data.curAddressData.provinceId;
-      postData.cityId = that.data.curAddressData.cityId;
-      if (that.data.curAddressData.districtId) {
-        postData.districtId = that.data.curAddressData.districtId;
-      }
-      postData.address = that.data.curAddressData.address;
-      postData.linkMan = that.data.curAddressData.linkMan;
-      postData.mobile = that.data.curAddressData.mobile;
-      postData.code = that.data.curAddressData.code;
-    }
-    if (that.data.curCoupon) {
-      postData.couponId = that.data.curCoupon.id;
-    }
+    // if (that.data.isNeedLogistics > 0) {
+    //   if (!that.data.curAddressData) {
+    //     wx.hideLoading();
+    //     wx.showModal({
+    //       title: '错误',
+    //       content: '请先设置您的收货地址！',
+    //       showCancel: false
+    //     })
+    //     return;
+    //   }
+    //   postData.provinceId = that.data.curAddressData.provinceId;
+    //   postData.cityId = that.data.curAddressData.cityId;
+    //   if (that.data.curAddressData.districtId) {
+    //     postData.districtId = that.data.curAddressData.districtId;
+    //   }
+    //   postData.address = that.data.curAddressData.address;
+    //   postData.linkMan = that.data.curAddressData.linkMan;
+    //   postData.mobile = that.data.curAddressData.mobile;
+    //   postData.code = that.data.curAddressData.code;
+    // }
+    // if (that.data.curCoupon) {
+    //   postData.couponId = that.data.curCoupon.id;
+    // }
     if (!e) {
       postData.calculate = "true";
     }
-
+    console.log("最终订单的商品"+JSON.stringify(postData))
     //保存订单todo
+    wx.cloud.init()
+    wx.cloud.callFunction({
+      name: "saveOrder",
+      data: {
+        goodsJsonStr: that.data.goodsList,
+        remark: remark,
+        nickName: nickName,
+        allGoodsPrice: that.data.allGoodsPrice,
+        createTime: (new Date()).toLocaleDateString() + ' ' + (new Date()).toLocaleTimeString()
+      },
+      success: function (res) {
 
+      }
+    })
 
 
 
@@ -194,6 +205,7 @@ Page({
     //         curAddressData: null
     //       });
     //     }
+     
         that.processYunfei();
     //   }
     // })

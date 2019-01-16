@@ -68,9 +68,10 @@ Page({
     if (!e.detail.userInfo){
       return;
     }
+    // 用户按了允许授权按钮
     if (app.globalData.isConnected) {
       wx.setStorageSync('userInfo', e.detail.userInfo)
-      this.login();
+      this.login(e.detail.userInfo);
     } else {
       wx.showToast({
         title: '当前无网络',
@@ -79,54 +80,81 @@ Page({
     }
    
   },
-  login: function () {
+  login: function (e) {
     let that = this;
     let token = wx.getStorageSync('token');
-    if (token) {
-      wx.request({
-        //url: 'https://api.it120.cc/' + app.globalData.subDomain + '/user/check-token',
-        data: {
-          token: token
-        },
-        success: function (res) {
-          if (res.data.code != 0) {
-            wx.removeStorageSync('token')
-            that.login();
-          } else {
-            // 回到原来的地方放
-            wx.navigateBack();
-          }
-        }
-      })
-      return;
-    }
+    // if (token) {
+    //   wx.request({
+    //     //url: 'https://api.it120.cc/' + app.globalData.subDomain + '/user/check-token',
+    //     data: {
+    //       token: token
+    //     },
+    //     success: function (res) {
+    //       if (res.data.code != 0) {
+    //         wx.removeStorageSync('token')
+    //         that.login();
+    //       } else {
+    //         // 回到原来的地方放
+    //         wx.navigateBack();
+    //       }
+    //     }
+    //   })
+    //   return;
+    // }
     wx.login({
       success: function (res) {
-        wx.request({
-          //url: 'https://api.it120.cc/' + app.globalData.subDomain + '/user/wxapp/login',
-          data: {
-            code: res.code
+        console.log('登录的用户详细信息====' + JSON.stringify(e))
+        wx.cloud.init()
+        wx.cloud.callFunction({
+          name:"userLogin",
+          data:{
+            'nickName': e.nickName
           },
           success: function (res) {
-            if (res.data.code == 10000) {
-              // 去注册
-              that.registerUser();
-              return;
-            }
-            if (res.data.code != 0) {
-              // 登录错误
-              wx.hideLoading();
-              wx.showModal({
-                title: '提示',
-                content: '无法登录，请重试',
-                showCancel: false
+            if (res.result.data[0]==null){
+              console.log("没有这个用户,需要插入")
+              wx.cloud.callFunction({
+                name: "saveUserInfo",
+                data: {
+                  'nickName': e.nickName,
+                  'gender': e.gender,
+                  'language': e.language,
+                  'city': e.city,
+                  'province': e.province,
+                  'country': e.country,
+                  'avatarUrl': e.avatarUrl
+                },
+                success: function (res) {
+
+                }
               })
-              return;
+
+            }else{
+              console.log("已经有用户，直接进入主页")
             }
-            wx.setStorageSync('token', res.data.data.token)
-            wx.setStorageSync('uid', res.data.data.uid)
+            // if (res.data.code == 10000) {
+            //   // 去注册
+            //   that.registerUser();
+            //   return;
+            // }
+            // if (res.data.code != 0) {
+            //   // 登录错误
+            //   wx.hideLoading();
+            //   wx.showModal({
+            //     title: '提示',
+            //     content: '无法登录，请重试',
+            //     showCancel: false
+            //   })
+            //   return;
+            // }
+            // wx.setStorageSync('token', res.data.data.token)
+            // wx.setStorageSync('uid', res.data.data.uid)
             // 回到原来的地方放
-            wx.navigateBack();
+            //wx.navigateBack();
+			wx.setStorageSync('nickName',e.nickName);
+            wx.switchTab({
+              url: '/pages/index/index'
+            })
           }
         })
       }
